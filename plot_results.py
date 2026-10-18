@@ -10,6 +10,9 @@ GRID = "#e1e0d9"
 BASELINE = "#c3c2b7"
 TARGET = "#2a78d6"      # categorical slot 1, blue
 PREDICTED = "#eb6834"   # categorical slot 2, orange
+AQUA = "#1baf7a"        # categorical slot 3, aqua
+# the first three palette slots pass the color checks together, past three the palette says to fold classes
+CLASS_COLORS = [TARGET, PREDICTED, AQUA]
 
 
 def plot_regression(x, csv_path, out_path, title=None):
@@ -79,12 +82,17 @@ def plot_classification(x, csv_path, out_path, title=None):
         ax.set_xlabel("x1", color=INK_SECONDARY)
         ax.set_ylabel("x2", color=INK_SECONDARY)
 
+    # one color per class, in palette order, so the same class always gets the same color
+    classes = np.unique(np.concatenate([target, predicted]))
+    if len(classes) > len(CLASS_COLORS):
+        raise ValueError(f"plot supports up to {len(CLASS_COLORS)} classes, got {len(classes)}")
+
     # left: true classes, right: what the network predicted
-    for cls, color in ((1, TARGET), (2, PREDICTED)):
+    for cls, color in zip(classes, CLASS_COLORS):
         mask = target == cls
-        ax1.scatter(x[mask, 0], x[mask, 1], s=28, color=color, edgecolor=SURFACE, linewidth=0.5, label=f"klasa {cls}")
+        ax1.scatter(x[mask, 0], x[mask, 1], s=28, color=color, edgecolor=SURFACE, linewidth=0.5, label=f"klasa {int(cls)}")
         mask = predicted == cls
-        ax2.scatter(x[mask, 0], x[mask, 1], s=28, color=color, edgecolor=SURFACE, linewidth=0.5, label=f"klasa {cls}")
+        ax2.scatter(x[mask, 0], x[mask, 1], s=28, color=color, edgecolor=SURFACE, linewidth=0.5, label=f"klasa {int(cls)}")
 
     # errors get a ring on the predicted side, so they are easy to find
     ax2.scatter(x[wrong, 0], x[wrong, 1], s=90, facecolors="none", edgecolors=INK, linewidths=1, label="błąd")

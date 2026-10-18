@@ -6,12 +6,12 @@ from loss_function import CCE
 from mlp import MLP
 from plot_results import plot_classification
 
-LAYERS = [2, 3, 3, 2]  # 2 inputs (x, y), 2 outputs (one per class)
-LEARNING_RATE = 1
+LAYERS = [2, 3,4, 3, 3]  
+LEARNING_RATE = 0.1
 EPOCHS = 300
 BATCH_SIZE = 1
-DATASET = "classification.simple.100"
-N_CLASSES = 2
+DATASET = "classification.gause.100"
+N_CLASSES = 3
 
 # results are saved under a name built from the configuration, so runs can be compared
 CONFIG = f"layers{'-'.join(map(str, LAYERS))}_lr{LEARNING_RATE}_ep{EPOCHS}_bs{BATCH_SIZE}_{DATASET}"
@@ -21,7 +21,6 @@ MODELS_DIR = "models"
 
 
 def to_one_hot(labels):
-    # the csv has classes 1 and 2, the network has one output per class: [1, 0] or [0, 1]
     index = labels[:, 0].astype(int) - 1
     onehot = np.zeros((len(index), N_CLASSES))
     onehot[np.arange(len(index)), index] = 1
@@ -54,13 +53,13 @@ def compare_classification(path):
 
 
 def run():
-    x, labels = load_xy("dane/projekt1/projekt1/classification/data.simple.train.100.csv")
+    x, labels = load_xy("dane/projekt1/projekt1/classification/data.three_gauss.test.100.csv")
     x, x_lo, x_hi = min_max(x)
     y = to_one_hot(labels)
     mlp = train_classification(x, y)
 
     # test set is scaled with the training set's lo and hi, like in regression
-    x_test, labels_test = load_xy("dane/projekt1/projekt1/classification/data.simple.test.100.csv")
+    x_test, labels_test = load_xy("dane/projekt1/projekt1/classification/data.three_gauss.train.100.csv")
     x_test, _, _ = min_max(x_test, x_lo, x_hi)
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
