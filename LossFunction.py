@@ -1,8 +1,16 @@
-def MSE(output, expected):
-    sum = 0
-    for i in range(len(output)):
-        y2 = output[i]
-        y = expected[i]
-        sum += (y2 - y) * (y2 - y)
-    return sum / 2
-    
+from abc import ABC, abstractmethod
+import numpy as np
+
+class LossFunction(ABC):
+    @abstractmethod
+    def function(self, output, expected):
+        pass
+    @abstractmethod
+    def deriviative(self, output, expected):
+        pass
+
+class MSE(LossFunction):
+    def function(self, output, expected):
+        return np.sum((output - expected) ** 2) / 2
+    def deriviative(self, output, expected):
+        return output - expected

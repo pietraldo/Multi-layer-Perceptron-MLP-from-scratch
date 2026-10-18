@@ -5,7 +5,7 @@ from LossFunction import MSE
 
 def test_feedforward():
     
-    mlp = MLP([1,2,1], Sigmoid(), MSE, )
+    mlp = MLP([1,2,1], Sigmoid(), MSE(), )
     
     # mlp.W[0] = np.array([[0.5],  [-0.3]])
     # mlp.W[1] = np.array([[0.8, -0.4]])
@@ -20,7 +20,7 @@ def test_feedforward():
     assert np.isclose(output[0], expected_output[0], 0.01)
 
 def test_forward_backward():
-    mlp = MLP([1,2,1], Sigmoid(), MSE, 1)
+    mlp = MLP([1,2,1], Sigmoid(), MSE(), 1)
     
     mlp.W[0] = np.array([[0.5],  [-0.3]])
     mlp.W[1] = np.array([[0.8, -0.4]])

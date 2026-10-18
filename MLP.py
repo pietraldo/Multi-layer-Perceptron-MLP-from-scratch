@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 
 class MLP:
@@ -12,7 +13,9 @@ class MLP:
         self.n = len(layers)
         self.lossFunction = lossFunction
         self.learning_step = learning_step
-        
+        self.W = []
+        self.b = []
+
         rng = np.random.default_rng(42)
         
         # initializing random weights
@@ -37,10 +40,9 @@ class MLP:
         return a, z
     
     def backpropagation(self, a, z, expected):
-        L = self.lossFunction(a[self.n - 1], expected)
+        L = self.lossFunction.function(a[self.n - 1], expected)
         print(f"loss: {L}")
-        # here we have to change (a[] - expected) to LossFunction derivative
-        error_signal = (a[self.n - 1] - expected) * self.activision.deriviative(z[self.n - 1])
+        error_signal = self.lossFunction.deriviative(a[self.n - 1], expected) * self.activision.deriviative(z[self.n - 1])
         print(error_signal)
         
         Gw = [[] for _ in range(self.n)]
@@ -57,6 +59,16 @@ class MLP:
             self.W[l] = self.W[l] - self.learning_step * Gw[l]
             self.b[l+1] = self.b[l+1] - self.learning_step * Gb[l]
     
+    def save(self, path):
+        # saves the whole model (weights, biases, layers, activation, loss, learning step)
+        with open(path, "wb") as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load(path):
+        with open(path, "rb") as f:
+            return pickle.load(f)
+
     def print(self):
         print("\nWeights: ")
         for wlayer in self.W:
