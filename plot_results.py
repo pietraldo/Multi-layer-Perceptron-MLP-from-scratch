@@ -1,0 +1,58 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# colors from the reference palette (light mode)
+SURFACE = "#fcfcfb"
+INK = "#0b0b0b"
+INK_SECONDARY = "#52514e"
+MUTED = "#898781"
+GRID = "#e1e0d9"
+BASELINE = "#c3c2b7"
+TARGET = "#2a78d6"      # categorical slot 1, blue
+PREDICTED = "#eb6834"   # categorical slot 2, orange
+
+
+def plot_regression(x, csv_path, out_path="wykres_regresja.png"):
+    # csv_path is the file written by test(): columns predicted,target
+    data = np.loadtxt(csv_path, delimiter=",", skiprows=1, ndmin=2)
+    predicted = data[:, 0]
+    target = data[:, 1]
+    mse = np.mean((predicted - target) ** 2)
+
+    order = np.argsort(x[:, 0])
+    xs = x[order, 0]
+
+    fig, (ax1, ax2) = plt.subplots(
+        1, 2, figsize=(11, 4.8), facecolor=SURFACE,
+        gridspec_kw={"width_ratios": [1.6, 1]},
+    )
+    for ax in (ax1, ax2):
+        ax.set_facecolor(SURFACE)
+        ax.spines[["top", "right"]].set_visible(False)
+        ax.spines[["left", "bottom"]].set_color(BASELINE)
+        ax.tick_params(colors=MUTED, labelsize=9)
+        ax.grid(True, color=GRID, linewidth=0.8)
+        ax.set_axisbelow(True)
+
+    # left: both values against x, sorted by x so the curves read as functions
+    ax1.plot(xs, target[order], color=TARGET, linewidth=2, marker="o", markersize=4, label="cel (y)")
+    ax1.plot(xs, predicted[order], color=PREDICTED, linewidth=2, marker="o", markersize=4, label="predykcja sieci")
+    ax1.set_xlabel("x", color=INK_SECONDARY)
+    ax1.set_ylabel("y (przeskalowane)", color=INK_SECONDARY)
+    ax1.set_title("Wartości w funkcji x", color=INK, loc="left", fontsize=12)
+    ax1.legend(frameon=False, labelcolor=INK_SECONDARY)
+
+    # right: predicted vs target, the dashed diagonal is a perfect fit
+    lo = min(target.min(), predicted.min())
+    hi = max(target.max(), predicted.max())
+    ax2.plot([lo, hi], [lo, hi], color=BASELINE, linewidth=1, linestyle="--", label="idealnie")
+    ax2.scatter(target, predicted, s=28, color=PREDICTED, edgecolor=SURFACE, linewidth=0.5, label="próbki")
+    ax2.set_xlabel("cel (y)", color=INK_SECONDARY)
+    ax2.set_ylabel("predykcja", color=INK_SECONDARY)
+    ax2.set_title(f"Predykcja vs cel, MSE = {mse:.4f}", color=INK, loc="left", fontsize=12)
+    ax2.legend(frameon=False, labelcolor=INK_SECONDARY)
+
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150, facecolor=SURFACE)
+    plt.close(fig)
+    return out_path
