@@ -1,11 +1,11 @@
 import json
 import os
 import numpy as np
-from activation_functions import Sigmoid
+from activation_functions import *
 from loss_function import MSE
 
 # names stored in the model file -> classes used to rebuild the model
-ACTIVATIONS = {"Sigmoid": Sigmoid}
+ACTIVATIONS = {"Sigmoid": Sigmoid, "Linear": Linear}
 LOSS_FUNCTIONS = {"MSE": MSE}
 
 class MLP:
@@ -14,9 +14,10 @@ class MLP:
     biases = []
     num_layers = 0
 
-    def __init__(self, layers, activation, loss_function, learning_step):
+    def __init__(self, layers, activation, output_activation, loss_function, learning_step):
         self.layers = layers
         self.activation = activation
+        self.output_activation = output_activation
         self.num_layers = len(layers)
         self.loss_function = loss_function
         self.learning_step = learning_step
@@ -89,12 +90,16 @@ class MLP:
 
         for idx in range(1, self.num_layers):
             z[idx] = self.weights[idx - 1] @ a[idx - 1] + self.biases[idx - 1]
-            a[idx] = self.activation.function(z[idx])
+            
+            if idx + 1 == self.num_layers:
+                a[idx] = self.output_activation.function(z[idx])
+            else:
+                a[idx] = self.activation.function(z[idx])
 
         return a, z
 
     def backpropagation(self, a, z, expected):
-        error_signal = self.loss_function.derivative(a[self.num_layers - 1], expected) * self.activation.derivative(z[self.num_layers - 1])
+        error_signal = self.loss_function.derivative(a[self.num_layers - 1], expected) * self.output_activation.derivative(z[self.num_layers - 1])
 
         grad_w = [[] for _ in range(self.num_layers - 1)]
         grad_b = [[] for _ in range(self.num_layers - 1)]
@@ -117,6 +122,7 @@ class MLP:
         data = {
             "layers": self.layers,
             "activation": type(self.activation).__name__,
+            "output_activation": type(self.output_activation).__name__,
             "loss_function": type(self.loss_function).__name__,
             "learning_step": self.learning_step,
             "weights": [w.tolist() for w in self.weights],
@@ -136,6 +142,8 @@ class MLP:
         model = MLP(
             data["layers"],
             ACTIVATIONS[data["activation"]](),
+            # files saved before output_activation existed were all sigmoid
+            ACTIVATIONS[data.get("output_activation", "Sigmoid")](),
             LOSS_FUNCTIONS[data["loss_function"]](),
             data["learning_step"],
         )

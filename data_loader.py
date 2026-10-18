@@ -10,8 +10,11 @@ def load_xy(path):
     return x, y
 
 
-def scale_y(y):
-    # divides y by max(|y|) so all targets fall in [-1, 1], which fits the sigmoid output
-    # returns the scaled y and the scale, multiply predictions by scale to get the original units
-    scale = np.max(np.abs(y))
-    return y / scale, scale
+def min_max(a, lo=None, hi=None):
+    # scales each column of a to [0, 1], sigmoid can only output values in that range
+    # pass lo and hi from the training set to scale the test set the same way
+    # returns the scaled array and the lo, hi that were used
+    if lo is None:
+        lo = a.min(axis=0)
+        hi = a.max(axis=0)
+    return (a - lo) / (hi - lo), lo, hi

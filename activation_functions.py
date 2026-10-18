@@ -13,4 +13,9 @@ class Sigmoid(ActivationFunction):
         return 1 / (1 + np.exp(-x))
     def derivative(self, x):
         return self.function(x)*(1-self.function(x))
-        
+    
+class Linear(ActivationFunction):
+    def function(self, x):
+        return x
+    def derivative(self, x):
+        return 1

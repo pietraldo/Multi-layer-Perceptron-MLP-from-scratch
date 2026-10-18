@@ -12,7 +12,7 @@ TARGET = "#2a78d6"      # categorical slot 1, blue
 PREDICTED = "#eb6834"   # categorical slot 2, orange
 
 
-def plot_regression(x, csv_path, out_path="wykres_regresja.png"):
+def plot_regression(x, csv_path, out_path, title=None):
     # csv_path is the file written by test(): columns predicted,target
     data = np.loadtxt(csv_path, delimiter=",", skiprows=1, ndmin=2)
     predicted = data[:, 0]
@@ -52,6 +52,8 @@ def plot_regression(x, csv_path, out_path="wykres_regresja.png"):
     ax2.set_title(f"Predykcja vs cel, MSE = {mse:.4f}", color=INK, loc="left", fontsize=12)
     ax2.legend(frameon=False, labelcolor=INK_SECONDARY)
 
+    if title:
+        fig.suptitle(title, color=INK, fontsize=11)
     fig.tight_layout()
     fig.savefig(out_path, dpi=150, facecolor=SURFACE)
     plt.close(fig)
