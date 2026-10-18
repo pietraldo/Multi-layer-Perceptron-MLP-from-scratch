@@ -2,11 +2,11 @@ import json
 import os
 import numpy as np
 from activation_functions import *
-from loss_function import MSE
+from loss_function import MSE, CCE, BCE
 
 # names stored in the model file -> classes used to rebuild the model
-ACTIVATIONS = {"Sigmoid": Sigmoid, "Linear": Linear}
-LOSS_FUNCTIONS = {"MSE": MSE}
+ACTIVATIONS = {"Sigmoid": Sigmoid, "Linear": Linear, "Softmax": Softmax}
+LOSS_FUNCTIONS = {"MSE": MSE, "CCE": CCE, "BCE": BCE}
 
 class MLP:
 
@@ -99,7 +99,8 @@ class MLP:
         return a, z
 
     def backpropagation(self, a, z, expected):
-        error_signal = self.loss_function.derivative(a[self.num_layers - 1], expected) * self.output_activation.derivative(z[self.num_layers - 1])
+        grad_out = self.loss_function.derivative(a[self.num_layers - 1], expected)
+        error_signal = self.output_activation.backward(z[self.num_layers - 1], a[self.num_layers - 1], grad_out)
 
         grad_w = [[] for _ in range(self.num_layers - 1)]
         grad_b = [[] for _ in range(self.num_layers - 1)]

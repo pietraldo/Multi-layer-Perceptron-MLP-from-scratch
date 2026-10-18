@@ -58,3 +58,45 @@ def plot_regression(x, csv_path, out_path, title=None):
     fig.savefig(out_path, dpi=150, facecolor=SURFACE)
     plt.close(fig)
     return out_path
+
+
+def plot_classification(x, csv_path, out_path, title=None):
+    # csv_path is the file written by predict_to_csv: columns predicted,target (classes 1 and 2)
+    data = np.loadtxt(csv_path, delimiter=",", skiprows=1, ndmin=2)
+    predicted = data[:, 0]
+    target = data[:, 1]
+    accuracy = np.mean(predicted == target)
+    wrong = predicted != target
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.8), facecolor=SURFACE, sharex=True, sharey=True)
+    for ax in (ax1, ax2):
+        ax.set_facecolor(SURFACE)
+        ax.spines[["top", "right"]].set_visible(False)
+        ax.spines[["left", "bottom"]].set_color(BASELINE)
+        ax.tick_params(colors=MUTED, labelsize=9)
+        ax.grid(True, color=GRID, linewidth=0.8)
+        ax.set_axisbelow(True)
+        ax.set_xlabel("x1", color=INK_SECONDARY)
+        ax.set_ylabel("x2", color=INK_SECONDARY)
+
+    # left: true classes, right: what the network predicted
+    for cls, color in ((1, TARGET), (2, PREDICTED)):
+        mask = target == cls
+        ax1.scatter(x[mask, 0], x[mask, 1], s=28, color=color, edgecolor=SURFACE, linewidth=0.5, label=f"klasa {cls}")
+        mask = predicted == cls
+        ax2.scatter(x[mask, 0], x[mask, 1], s=28, color=color, edgecolor=SURFACE, linewidth=0.5, label=f"klasa {cls}")
+
+    # errors get a ring on the predicted side, so they are easy to find
+    ax2.scatter(x[wrong, 0], x[wrong, 1], s=90, facecolors="none", edgecolors=INK, linewidths=1, label="błąd")
+
+    ax1.set_title("Prawdziwe klasy", color=INK, loc="left", fontsize=12)
+    ax2.set_title(f"Predykcja, accuracy = {accuracy:.2%}", color=INK, loc="left", fontsize=12)
+    ax1.legend(frameon=False, labelcolor=INK_SECONDARY)
+    ax2.legend(frameon=False, labelcolor=INK_SECONDARY)
+
+    if title:
+        fig.suptitle(title, color=INK, fontsize=11)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150, facecolor=SURFACE)
+    plt.close(fig)
+    return out_path
