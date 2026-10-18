@@ -6,11 +6,11 @@ class LossFunction(ABC):
     def function(self, output, expected):
         pass
     @abstractmethod
-    def deriviative(self, output, expected):
+    def derivative(self, output, expected):
         pass
 
 class MSE(LossFunction):
     def function(self, output, expected):
         return np.sum((output - expected) ** 2) / 2
-    def deriviative(self, output, expected):
+    def derivative(self, output, expected):
         return output - expected
