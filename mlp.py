@@ -31,7 +31,7 @@ class MLP:
 
         # initializing random weights
         for i in range(0, self.num_layers - 1):
-            matrix = rng.random((layers[i + 1], layers[i]))
+            matrix = rng.normal(0, np.sqrt(1 / layers[i]), (layers[i + 1], layers[i]))
             self.weights.append(matrix)
 
         # initializing random biases, input layer has no bias so biases[i] belongs to layer i+1

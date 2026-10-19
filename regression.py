@@ -9,10 +9,10 @@ from plot_network import plot_network_html
 from plot_results import plot_loss, plot_regression
 from run_output import new_run_dir
 
-LAYERS = [1, 2,4,4, 3, 1]
-LEARNING_RATE = 1
+LAYERS = [1, 16 , 1]
+LEARNING_RATE = 0.2
 EPOCHS = 500
-BATCH_SIZE = 10
+BATCH_SIZE = 1
 SEED = 42  # the same seed gives the same weights, the same shuffling and the same results
 DATASET = "regression_cube_100"
 
