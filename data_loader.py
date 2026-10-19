@@ -18,3 +18,14 @@ def min_max(a, lo=None, hi=None):
         lo = a.min(axis=0)
         hi = a.max(axis=0)
     return (a - lo) / (hi - lo), lo, hi
+
+
+def standardize(a, mean=None, std=None):
+    # shifts and scales each column of a to mean 0 and standard deviation 1
+    # unlike min_max the result has no fixed range, so test values outside the training range stay outside it
+    # pass mean and std from the training set to scale the test set the same way
+    # returns the scaled array and the mean, std that were used
+    if mean is None:
+        mean = a.mean(axis=0)
+        std = a.std(axis=0)
+    return (a - mean) / std, mean, std

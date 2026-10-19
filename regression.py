@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from activation_functions import Sigmoid, Linear
-from data_loader import load_xy, min_max
+from data_loader import load_xy, min_max, standardize
 from datasets import dataset_paths
 from loss_function import MSE
 from mlp import MLP
@@ -10,7 +10,7 @@ from plot_results import plot_loss, plot_regression
 from run_output import new_run_dir
 
 LAYERS = [1, 16 , 1]
-LEARNING_RATE = 0.2
+LEARNING_RATE = 0.05
 EPOCHS = 500
 BATCH_SIZE = 1
 SEED = 42  # the same seed gives the same weights, the same shuffling and the same results
@@ -52,16 +52,19 @@ def run():
     out_dir = new_run_dir(CONFIG)
     train_path, test_path = dataset_paths(DATASET)
 
-    # x is used as it is, only y is scaled, so test x values outside the training range are not changed
+    # x is standardized to mean 0 and std 1, y is scaled to [0, 1]
     x, y = load_xy(train_path)
+    x, x_mean, x_std = standardize(x)
     y, y_lo, y_hi = min_max(y)
     mlp, losses = train_regression(x, y, out_dir)
 
-    # test set y is scaled with the training set's lo and hi, not its own min and max
+    # test set is scaled with the training set's statistics, not its own
+    # x_test keeps the original values for the plot, the network gets x_test_std
     x_test, y_test = load_xy(test_path)
+    x_test_std, _, _ = standardize(x_test, x_mean, x_std)
     y_test, _, _ = min_max(y_test, y_lo, y_hi)
 
-    csv_path = predict_to_csv(x_test, y_test, mlp, os.path.join(out_dir, f"{CONFIG}.csv"))
+    csv_path = predict_to_csv(x_test_std, y_test, mlp, os.path.join(out_dir, f"{CONFIG}.csv"))
     compare_regression(csv_path)
     plot_regression(x_test, csv_path, os.path.join(out_dir, f"{CONFIG}.png"), title=CONFIG)
     plot_loss(losses, os.path.join(out_dir, f"{CONFIG}_loss.png"), title=CONFIG)
