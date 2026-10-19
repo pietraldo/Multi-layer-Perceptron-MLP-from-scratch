@@ -17,7 +17,7 @@ DATASETS = {
     "regression_activation_500":("regression/data.activation.train.500.csv", "regression/data.activation.test.500.csv"),
     "regression_activation_1000":("regression/data.activation.train.1000.csv", "regression/data.activation.test.1000.csv"),
     "regression_activation_10000":("regression/data.activation.train.10000.csv", "regression/data.activation.test.10000.csv"),
-    "regression_cube_100":("regression/data.cube.train.100.csv", "regression/data.cube.test.100.csv"),
+    "regression_cube_100":("regression/data.cube.train.100.csv", "regression/data.cube.train.100.csv"),
     "regression_cube_500":("regression/data.cube.train.500.csv", "regression/data.cube.test.500.csv"),
     "regression_cube_1000":("regression/data.cube.train.1000.csv", "regression/data.cube.test.1000.csv"),
     "regression_cube_10000":("regression/data.cube.train.10000.csv", "regression/data.cube.test.10000.csv"),

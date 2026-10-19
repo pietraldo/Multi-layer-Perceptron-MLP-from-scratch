@@ -9,18 +9,19 @@ from plot_network import plot_network_html
 from plot_results import plot_loss, plot_regression
 from run_output import new_run_dir
 
-LAYERS = [1, 3, 3, 1]
-LEARNING_RATE = 0.2
+LAYERS = [1, 2,4,4, 3, 1]
+LEARNING_RATE = 1
 EPOCHS = 500
-BATCH_SIZE = 1
-DATASET = "regression_activation_100"
+BATCH_SIZE = 10
+SEED = 42  # the same seed gives the same weights, the same shuffling and the same results
+DATASET = "regression_cube_100"
 
 # results are saved under a name built from the configuration, so runs can be compared
-CONFIG = f"layers{'-'.join(map(str, LAYERS))}_lr{LEARNING_RATE}_ep{EPOCHS}_bs{BATCH_SIZE}_{DATASET}"
+CONFIG = f"layers{'-'.join(map(str, LAYERS))}_lr{LEARNING_RATE}_ep{EPOCHS}_bs{BATCH_SIZE}_seed{SEED}_{DATASET}"
 
 
 def train_regression(x, y, out_dir):
-    mlp = MLP(LAYERS, Sigmoid(), Linear(), MSE(), LEARNING_RATE)
+    mlp = MLP(LAYERS, Sigmoid(), Linear(), MSE(), LEARNING_RATE, seed=SEED)
     losses = mlp.train(EPOCHS, BATCH_SIZE, x, y)
     mlp.save(os.path.join(out_dir, f"{CONFIG}.json"))
     return mlp, losses
@@ -51,14 +52,13 @@ def run():
     out_dir = new_run_dir(CONFIG)
     train_path, test_path = dataset_paths(DATASET)
 
+    # x is used as it is, only y is scaled, so test x values outside the training range are not changed
     x, y = load_xy(train_path)
-    x, x_lo, x_hi = min_max(x)
     y, y_lo, y_hi = min_max(y)
     mlp, losses = train_regression(x, y, out_dir)
 
-    # test set is scaled with the training set's lo and hi, not its own min and max
+    # test set y is scaled with the training set's lo and hi, not its own min and max
     x_test, y_test = load_xy(test_path)
-    x_test, _, _ = min_max(x_test, x_lo, x_hi)
     y_test, _, _ = min_max(y_test, y_lo, y_hi)
 
     csv_path = predict_to_csv(x_test, y_test, mlp, os.path.join(out_dir, f"{CONFIG}.csv"))

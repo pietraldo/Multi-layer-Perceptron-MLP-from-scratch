@@ -14,7 +14,7 @@ class MLP:
     biases = []
     num_layers = 0
 
-    def __init__(self, layers, activation, output_activation, loss_function, learning_step):
+    def __init__(self, layers, activation, output_activation, loss_function, learning_step, seed=42):
         self.layers = layers
         self.activation = activation
         self.output_activation = output_activation
@@ -24,7 +24,10 @@ class MLP:
         self.weights = []
         self.biases = []
 
-        rng = np.random.default_rng(42)
+        # one seeded generator for the initial weights and for shuffling, so the same seed gives the same run
+        self.seed = seed
+        self.rng = np.random.default_rng(seed)
+        rng = self.rng
 
         # initializing random weights
         for i in range(0, self.num_layers - 1):
@@ -45,7 +48,7 @@ class MLP:
             loss = 0
             
             # shuffle x, y
-            perm = np.random.permutation(len(x))
+            perm = self.rng.permutation(len(x))
             x = x[perm]
             y = y[perm]
             
@@ -140,6 +143,7 @@ class MLP:
             "output_activation": type(self.output_activation).__name__,
             "loss_function": type(self.loss_function).__name__,
             "learning_step": self.learning_step,
+            "seed": self.seed,
             "weights": [w.tolist() for w in self.weights],
             "biases": [b.tolist() for b in self.biases],
         }
@@ -161,6 +165,7 @@ class MLP:
             ACTIVATIONS[data.get("output_activation", "Sigmoid")](),
             LOSS_FUNCTIONS[data["loss_function"]](),
             data["learning_step"],
+            seed=data.get("seed", 42),
         )
         weights = [np.array(w, dtype=float) for w in data["weights"]]
         biases = [np.array(b, dtype=float) for b in data["biases"]]

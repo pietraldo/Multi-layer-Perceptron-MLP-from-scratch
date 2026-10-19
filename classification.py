@@ -5,9 +5,7 @@ from data_loader import load_xy, min_max
 from datasets import dataset_paths
 from loss_function import CCE
 from mlp import MLP
-from plot_network import plot_network_html
 from plot_results import plot_classification, plot_loss
-from run_output import new_run_dir
 
 LAYERS = [2, 3,4, 3, 3]
 LEARNING_RATE = 0.1
@@ -18,6 +16,9 @@ N_CLASSES = 3
 
 # results are saved under a name built from the configuration, so runs can be compared
 CONFIG = f"layers{'-'.join(map(str, LAYERS))}_lr{LEARNING_RATE}_ep{EPOCHS}_bs{BATCH_SIZE}_{DATASET}"
+RESULTS_DIR = "wyniki"
+PLOTS_DIR = "wykresy"
+MODELS_DIR = "models"
 
 
 def to_one_hot(labels):
@@ -27,10 +28,10 @@ def to_one_hot(labels):
     return onehot
 
 
-def train_classification(x, y, out_dir):
+def train_classification(x, y):
     mlp = MLP(LAYERS, Sigmoid(), Softmax(), CCE(), LEARNING_RATE)
     losses = mlp.train(EPOCHS, BATCH_SIZE, x, y)
-    mlp.save(os.path.join(out_dir, f"{CONFIG}.json"))
+    mlp.save(os.path.join(MODELS_DIR, f"{CONFIG}.json"))
     return mlp, losses
 
 
@@ -53,20 +54,20 @@ def compare_classification(path):
 
 
 def run():
-    out_dir = new_run_dir(CONFIG)
     train_path, test_path = dataset_paths(DATASET)
 
     x, labels = load_xy(train_path)
     x, x_lo, x_hi = min_max(x)
     y = to_one_hot(labels)
-    mlp, losses = train_classification(x, y, out_dir)
+    mlp, losses = train_classification(x, y)
 
     # test set is scaled with the training set's lo and hi, like in regression
     x_test, labels_test = load_xy(test_path)
     x_test, _, _ = min_max(x_test, x_lo, x_hi)
 
-    csv_path = predict_to_csv(x_test, labels_test, mlp, os.path.join(out_dir, f"{CONFIG}.csv"))
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+    os.makedirs(PLOTS_DIR, exist_ok=True)
+    csv_path = predict_to_csv(x_test, labels_test, mlp, os.path.join(RESULTS_DIR, f"{CONFIG}.csv"))
     compare_classification(csv_path)
-    plot_classification(x_test, csv_path, os.path.join(out_dir, f"{CONFIG}.png"), title=CONFIG)
-    plot_loss(losses, os.path.join(out_dir, f"{CONFIG}_loss.png"), title=CONFIG)
-    plot_network_html(mlp.history, losses, LAYERS, os.path.join(out_dir, f"{CONFIG}_network.html"), title=CONFIG)
+    plot_classification(x_test, csv_path, os.path.join(PLOTS_DIR, f"{CONFIG}.png"), title=CONFIG)
+    plot_loss(losses, os.path.join(PLOTS_DIR, f"{CONFIG}_loss.png"), title=CONFIG)
