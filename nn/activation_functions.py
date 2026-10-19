@@ -20,6 +20,14 @@ class Sigmoid(ActivationFunction):
     def backward(self, z, a, grad_out):
         return grad_out * a * (1 - a)
 
+class Tanh(ActivationFunction):
+    def function(self, x):
+        return np.tanh(x)
+    def derivative(self, x):
+        return 1 - np.tanh(x)**2
+    def backward(self, z, a, grad_out):
+        return grad_out * (1 - a**2)
+
 class Linear(ActivationFunction):
     def function(self, x):
         return x
@@ -27,6 +35,16 @@ class Linear(ActivationFunction):
         return 1
     def backward(self, z, a, grad_out):
         return grad_out
+
+class ReLU(ActivationFunction):
+    # max(0, x), does not saturate for x > 0, so outside the training range it continues as a straight line
+    def function(self, x):
+        return np.maximum(0, x)
+    def derivative(self, x):
+        # derivative at exactly 0 is taken as 0
+        return (x > 0).astype(float)
+    def backward(self, z, a, grad_out):
+        return grad_out * (z > 0)
 
 class Softmax(ActivationFunction):
     def function(self, x):

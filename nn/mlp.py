@@ -1,11 +1,11 @@
 import json
 import os
 import numpy as np
-from activation_functions import *
-from loss_function import MSE, CCE, BCE
+from .activation_functions import *
+from .loss_function import MSE, CCE, BCE
 
 # names stored in the model file -> classes used to rebuild the model
-ACTIVATIONS = {"Sigmoid": Sigmoid, "Linear": Linear, "Softmax": Softmax}
+ACTIVATIONS = {"Sigmoid": Sigmoid, "Tanh": Tanh, "Linear": Linear, "Softmax": Softmax, "ReLU": ReLU}
 LOSS_FUNCTIONS = {"MSE": MSE, "CCE": CCE, "BCE": BCE}
 
 class MLP:
@@ -38,7 +38,7 @@ class MLP:
         for size in layers[1:]:
             self.biases.append(rng.random(size))
             
-    def train(self, epoch, batch_size, x, y):
+    def train(self, epoch, batch_size, x, y, verbose=True):
         
         losses = []
         # weights and biases before training and after every epoch, used to show how the network changed
@@ -84,7 +84,8 @@ class MLP:
                     for arr in grad_b_all:
                         arr[:] = 0
             
-            print(f"Epoch {epoch_num+1} loss: {loss}")
+            if verbose:
+                print(f"Epoch {epoch_num+1} loss: {loss}")
             losses.append(loss)
             self.history.append(self.snapshot())
 
@@ -114,6 +115,10 @@ class MLP:
                 a[idx] = self.activation.function(z[idx])
 
         return a, z
+
+    def predict(self, x):
+        # network output for every row of x, shape (n, output size)
+        return np.array([self.feedforward(xi)[0][-1] for xi in x])
 
     def backpropagation(self, a, z, expected):
         grad_out = self.loss_function.derivative(a[self.num_layers - 1], expected)

@@ -3,7 +3,8 @@ import os
 DATA_DIR = os.path.join("dane", "projekt1", "projekt1")
 
 # name -> (train file, test file), paths are relative to DATA_DIR
-# the name goes into the result, plot and model file names, and DATASET in regression.py / classification.py is set to it
+# the name goes into the result folder names and is used as Config.dataset in configs.py
+# the task (regression or classification) is taken from the name prefix
 DATASETS = {
     "classification_simple_100":("classification/data.simple.train.100.csv", "classification/data.simple.test.100.csv"),
     "classification_simple_500":("classification/data.simple.train.500.csv", "classification/data.simple.test.500.csv"),
@@ -17,7 +18,7 @@ DATASETS = {
     "regression_activation_500":("regression/data.activation.train.500.csv", "regression/data.activation.test.500.csv"),
     "regression_activation_1000":("regression/data.activation.train.1000.csv", "regression/data.activation.test.1000.csv"),
     "regression_activation_10000":("regression/data.activation.train.10000.csv", "regression/data.activation.test.10000.csv"),
-    "regression_cube_100":("regression/data.cube.train.100.csv", "regression/data.cube.train.100.csv"),
+    "regression_cube_100":("regression/data.cube.train.100.csv", "regression/data.cube.test.100.csv"),
     "regression_cube_500":("regression/data.cube.train.500.csv", "regression/data.cube.test.500.csv"),
     "regression_cube_1000":("regression/data.cube.train.1000.csv", "regression/data.cube.test.1000.csv"),
     "regression_cube_10000":("regression/data.cube.train.10000.csv", "regression/data.cube.test.10000.csv"),

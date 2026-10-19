@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.testing import assert_allclose
 
-from mlp import MLP
+from nn.mlp import MLP
 
 MODEL_PATH = "./tests/models/model_z_wykladu.json"
 TOL = 1e-4  # values from the lecture are rounded to 4 decimals
