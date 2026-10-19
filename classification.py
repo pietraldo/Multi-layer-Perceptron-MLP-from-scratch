@@ -2,15 +2,16 @@ import os
 import numpy as np
 from activation_functions import Sigmoid, Softmax
 from data_loader import load_xy, min_max
+from datasets import dataset_paths
 from loss_function import CCE
 from mlp import MLP
 from plot_results import plot_classification
 
-LAYERS = [2, 3,4, 3, 3]  
+LAYERS = [2, 3,4, 3, 3]
 LEARNING_RATE = 0.1
 EPOCHS = 300
 BATCH_SIZE = 1
-DATASET = "classification.gause.100"
+DATASET = "classification_three_gauss_100"  # name from datasets.py
 N_CLASSES = 3
 
 # results are saved under a name built from the configuration, so runs can be compared
@@ -53,13 +54,15 @@ def compare_classification(path):
 
 
 def run():
-    x, labels = load_xy("dane/projekt1/projekt1/classification/data.three_gauss.test.100.csv")
+    train_path, test_path = dataset_paths(DATASET)
+
+    x, labels = load_xy(train_path)
     x, x_lo, x_hi = min_max(x)
     y = to_one_hot(labels)
     mlp = train_classification(x, y)
 
     # test set is scaled with the training set's lo and hi, like in regression
-    x_test, labels_test = load_xy("dane/projekt1/projekt1/classification/data.three_gauss.train.100.csv")
+    x_test, labels_test = load_xy(test_path)
     x_test, _, _ = min_max(x_test, x_lo, x_hi)
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
