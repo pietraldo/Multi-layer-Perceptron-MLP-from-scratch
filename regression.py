@@ -5,26 +5,25 @@ from data_loader import load_xy, min_max
 from datasets import dataset_paths
 from loss_function import MSE
 from mlp import MLP
-from plot_results import plot_regression
+from plot_network import plot_network_html
+from plot_results import plot_loss, plot_regression
+from run_output import new_run_dir
 
 LAYERS = [1, 3, 3, 1]
 LEARNING_RATE = 0.2
 EPOCHS = 500
 BATCH_SIZE = 1
-DATASET = "regression_activation_100"  # name from datasets.py
+DATASET = "regression_activation_100"
 
 # results are saved under a name built from the configuration, so runs can be compared
 CONFIG = f"layers{'-'.join(map(str, LAYERS))}_lr{LEARNING_RATE}_ep{EPOCHS}_bs{BATCH_SIZE}_{DATASET}"
-RESULTS_DIR = "wyniki"
-PLOTS_DIR = "wykresy"
-MODELS_DIR = "models"
 
 
-def train_regression(x, y):
+def train_regression(x, y, out_dir):
     mlp = MLP(LAYERS, Sigmoid(), Linear(), MSE(), LEARNING_RATE)
-    mlp.train(EPOCHS, BATCH_SIZE, x, y)
-    mlp.save(os.path.join(MODELS_DIR, f"{CONFIG}.json"))
-    return mlp
+    losses = mlp.train(EPOCHS, BATCH_SIZE, x, y)
+    mlp.save(os.path.join(out_dir, f"{CONFIG}.json"))
+    return mlp, losses
 
 
 def predict_to_csv(x, y, model, out_path):
@@ -49,20 +48,21 @@ def compare_regression(path):
 
 
 def run():
+    out_dir = new_run_dir(CONFIG)
     train_path, test_path = dataset_paths(DATASET)
 
     x, y = load_xy(train_path)
     x, x_lo, x_hi = min_max(x)
     y, y_lo, y_hi = min_max(y)
-    mlp = train_regression(x, y)
+    mlp, losses = train_regression(x, y, out_dir)
 
     # test set is scaled with the training set's lo and hi, not its own min and max
     x_test, y_test = load_xy(test_path)
     x_test, _, _ = min_max(x_test, x_lo, x_hi)
     y_test, _, _ = min_max(y_test, y_lo, y_hi)
 
-    os.makedirs(RESULTS_DIR, exist_ok=True)
-    os.makedirs(PLOTS_DIR, exist_ok=True)
-    csv_path = predict_to_csv(x_test, y_test, mlp, os.path.join(RESULTS_DIR, f"{CONFIG}.csv"))
+    csv_path = predict_to_csv(x_test, y_test, mlp, os.path.join(out_dir, f"{CONFIG}.csv"))
     compare_regression(csv_path)
-    plot_regression(x_test, csv_path, os.path.join(PLOTS_DIR, f"{CONFIG}.png"), title=CONFIG)
+    plot_regression(x_test, csv_path, os.path.join(out_dir, f"{CONFIG}.png"), title=CONFIG)
+    plot_loss(losses, os.path.join(out_dir, f"{CONFIG}_loss.png"), title=CONFIG)
+    plot_network_html(mlp.history, losses, LAYERS, os.path.join(out_dir, f"{CONFIG}_network.html"), title=CONFIG)

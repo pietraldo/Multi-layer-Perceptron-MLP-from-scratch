@@ -37,6 +37,9 @@ class MLP:
             
     def train(self, epoch, batch_size, x, y):
         
+        losses = []
+        # weights and biases before training and after every epoch, used to show how the network changed
+        self.history = [self.snapshot()]
         for epoch_num in range(epoch):
             
             loss = 0
@@ -79,8 +82,19 @@ class MLP:
                         arr[:] = 0
             
             print(f"Epoch {epoch_num+1} loss: {loss}")
+            losses.append(loss)
+            self.history.append(self.snapshot())
+
+        return losses
                     
         
+
+    def snapshot(self):
+        # copy of the current weights and biases, as plain lists
+        return {
+            "weights": [w.tolist() for w in self.weights],
+            "biases": [b.tolist() for b in self.biases],
+        }
 
     def feedforward(self, input_data):
         a = [np.array([]) for _ in range(self.num_layers)]
