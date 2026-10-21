@@ -10,6 +10,9 @@ from PIL import Image, ImageDraw, ImageTk
 from nn.mlp import MLP
 from training_mnist_model import MODELS_DIR, ROOT, flatten_images
 
+# demo model shipped with the project, used when no model has been trained yet
+DEMO_MODEL = os.path.join(ROOT, "models", "demo", "model.json")
+
 # drawing area, the drawing is kept as a grayscale image of this size and scaled down to 28x28 for the model
 CANVAS_SIZE = 320
 BRUSH_WIDTH = 26
@@ -320,7 +323,8 @@ class DigitRecognizerApp:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="rysowanie cyfr myszką i rozpoznawanie ich wytrenowanym modelem")
-    parser.add_argument("model", nargs="?", help="ścieżka do model.json, domyślnie ostatnia epoka najnowszego treningu")
+    parser.add_argument("model", nargs="?", help="ścieżka do model.json, domyślnie ostatnia epoka najnowszego treningu "
+                                                 "albo models/demo/model.json, gdy nie ma żadnego treningu")
     return parser.parse_args()
 
 
@@ -337,7 +341,7 @@ def main():
     args = parse_args()
     enable_sharp_rendering()
     root = tk.Tk()
-    DigitRecognizerApp(root, args.model or find_latest_model(MODELS_DIR))
+    DigitRecognizerApp(root, args.model or find_latest_model(MODELS_DIR) or DEMO_MODEL)
     root.mainloop()
 
 

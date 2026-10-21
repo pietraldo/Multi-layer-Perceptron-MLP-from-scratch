@@ -1,0 +1,35 @@
+{
+  "layers": [
+    1,
+    2,
+    1
+  ],
+  "activation": "Sigmoid",
+  "loss_function": "MSE",
+  "learning_step": 1,
+  "weights": [
+    [
+      [
+        0.5
+      ],
+      [
+        -0.3
+      ]
+    ],
+    [
+      [
+        0.8,
+        -0.4
+      ]
+    ]
+  ],
+  "biases": [
+    [
+      0.1,
+      0.2
+    ],
+    [
+      0.1
+    ]
+  ]
+}

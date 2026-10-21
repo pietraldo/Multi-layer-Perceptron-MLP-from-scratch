@@ -15,11 +15,12 @@ from nn.loss_function import CCE
 from nn.mlp import MLP
 from plotting.comparison import style_axes
 from plotting.results import SURFACE, INK, INK_SECONDARY, TARGET, PREDICTED
+from nn.learning_step_update import ExponentialDecay
 
-# architecture: 784 inputs (flattened 28x28 image) -> 128 ReLU -> 10 softmax
+# architecture: 784 inputs (flattened 28x28 image) -> Hidden layers ReLU -> 10 softmax
 INPUT_SIZE = 28 * 28
-HIDDEN_SIZE = 128
 NUM_CLASSES = 10
+LAYERS = [INPUT_SIZE, 256, 128, NUM_CLASSES]
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(ROOT, "dane", "mnist_dataset")
@@ -62,12 +63,13 @@ def prepare_data(data_dir):
 
 def build_model(learning_rate, seed):
     return MLP(
-        [INPUT_SIZE, HIDDEN_SIZE, NUM_CLASSES],
+        LAYERS,
         activation=ReLU(),
         output_activation=Softmax(),
         loss_function=CCE(),
         learning_step=learning_rate,
         seed=seed,
+        learning_step_update = ExponentialDecay(0.75, 0.0001)
     )
 
 

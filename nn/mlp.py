@@ -3,10 +3,13 @@ import os
 import numpy as np
 from .activation_functions import *
 from .loss_function import MSE, CCE, BCE
+from .learning_step_update import Constant, StepDecay, ExponentialDecay, InverseTimeDecay, ReduceOnPlateau
 
 # names stored in the model file -> classes used to rebuild the model
 ACTIVATIONS = {"Sigmoid": Sigmoid, "Tanh": Tanh, "Linear": Linear, "Softmax": Softmax, "ReLU": ReLU}
 LOSS_FUNCTIONS = {"MSE": MSE, "CCE": CCE, "BCE": BCE}
+LEARNING_STEP_UPDATES = {"Constant": Constant, "StepDecay": StepDecay, "ExponentialDecay": ExponentialDecay,
+                         "InverseTimeDecay": InverseTimeDecay, "ReduceOnPlateau": ReduceOnPlateau}
 
 class MLP:
 
@@ -14,13 +17,19 @@ class MLP:
     biases = []
     num_layers = 0
 
-    def __init__(self, layers, activation, output_activation, loss_function, learning_step, seed=42):
+    def __init__(self, layers, activation, output_activation, loss_function, learning_step, seed=42, learning_step_update=None):
         self.layers = layers
         self.activation = activation
         self.output_activation = output_activation
         self.num_layers = len(layers)
         self.loss_function = loss_function
+        # learning step given by the user, learning_step is the current one and changes during training
+        self.initial_learning_step = learning_step
         self.learning_step = learning_step
+        # how the learning step changes between epochs, by default it stays the same
+        self.learning_step_update = learning_step_update if learning_step_update is not None else Constant()
+        # counts epochs across train calls, so step based updates continue correctly after loading a model
+        self.epochs_trained = 0
         self.weights = []
         self.biases = []
 
@@ -41,6 +50,8 @@ class MLP:
     def train(self, epoch, batch_size, x, y, verbose=True):
         
         losses = []
+        # learning step used in every epoch
+        self.learning_steps = []
         # weights and biases before training and after every epoch, used to show how the network changed
         self.history = [self.snapshot()]
         for epoch_num in range(epoch):
@@ -85,12 +96,18 @@ class MLP:
                         arr[:] = 0
             
             if verbose:
-                print(f"Epoch {epoch_num+1} loss: {loss}")
+                print(f"Epoch {epoch_num+1} loss: {loss} learning step: {self.learning_step}")
             losses.append(loss)
+            self.learning_steps.append(self.learning_step)
             self.history.append(self.snapshot())
 
+            self.epochs_trained += 1
+            self.update_learning_step(loss)
+
         return losses
-                    
+
+    def update_learning_step(self, loss):
+        self.learning_step = self.learning_step_update.update(self.learning_step, self.epochs_trained, loss)
 
     def snapshot(self):
         # copy of the current weights and biases, as plain lists
@@ -146,7 +163,15 @@ class MLP:
             "activation": type(self.activation).__name__,
             "output_activation": type(self.output_activation).__name__,
             "loss_function": type(self.loss_function).__name__,
-            "learning_step": self.learning_step,
+            # initial step, so the file describes the model as it was configured
+            "learning_step": self.initial_learning_step,
+            # step for the next epoch, used to continue training after loading
+            "current_learning_step": self.learning_step,
+            "learning_step_update": {
+                "name": type(self.learning_step_update).__name__,
+                "params": self.learning_step_update.params(),
+            },
+            "epochs_trained": self.epochs_trained,
             "seed": self.seed,
             "weights": [w.tolist() for w in self.weights],
             "biases": [b.tolist() for b in self.biases],
@@ -162,6 +187,8 @@ class MLP:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
+        # files saved before learning_step_update existed used a constant step
+        update = data.get("learning_step_update", {"name": "Constant", "params": {}})
         model = MLP(
             data["layers"],
             ACTIVATIONS[data["activation"]](),
@@ -170,7 +197,10 @@ class MLP:
             LOSS_FUNCTIONS[data["loss_function"]](),
             data["learning_step"],
             seed=data.get("seed", 42),
+            learning_step_update=LEARNING_STEP_UPDATES[update["name"]](**update["params"]),
         )
+        model.learning_step = data.get("current_learning_step", data["learning_step"])
+        model.epochs_trained = data.get("epochs_trained", 0)
         weights = [np.array(w, dtype=float) for w in data["weights"]]
         biases = [np.array(b, dtype=float) for b in data["biases"]]
 
