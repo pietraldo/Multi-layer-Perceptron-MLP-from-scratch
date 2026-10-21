@@ -6,15 +6,27 @@ import random
 import matplotlib.pyplot as plt
 
 #
+# Max pooling: each size x size block is replaced by its maximum, blocks do not overlap
+# if the image side is not divisible by size, zeros are added at the bottom and right
+# MNIST borders are zero anyway, so the padding does not change the maxima
+#
+def max_pool(img, size):
+    h, w = img.shape
+    img = np.pad(img, ((0, -h % size), (0, -w % size)), mode='constant')
+    h, w = img.shape
+    return img.reshape(h // size, size, w // size, size).max(axis=(1, 3))
+
+#
 # MNIST Data Loader Class
 #
 class MnistDataloader(object):
     def __init__(self, training_images_filepath,training_labels_filepath,
-                 test_images_filepath, test_labels_filepath):
+                 test_images_filepath, test_labels_filepath, pool_size=3):
         self.training_images_filepath = training_images_filepath
         self.training_labels_filepath = training_labels_filepath
         self.test_images_filepath = test_images_filepath
         self.test_labels_filepath = test_labels_filepath
+        self.pool_size = pool_size
     
     def read_images_labels(self, images_filepath, labels_filepath):        
         labels = []
@@ -31,12 +43,10 @@ class MnistDataloader(object):
             image_data = array("B", file.read())        
         images = []
         for i in range(size):
-            images.append([0] * rows * cols)
-        for i in range(size):
             img = np.array(image_data[i * rows * cols:(i + 1) * rows * cols])
-            img = img.reshape(28, 28)
-            images[i][:] = img            
-        
+            img = img.reshape(rows, cols)
+            images.append(max_pool(img, self.pool_size))
+
         return images, labels
             
     def load_data(self):
@@ -72,28 +82,32 @@ def show_images(images, title_texts):
     plt.show()
 
 #
-# Load MINST dataset
+# Script part, runs only when this file is executed directly, not on import
 #
-mnist_dataloader = MnistDataloader(training_images_filepath, training_labels_filepath, test_images_filepath, test_labels_filepath)
-(x_train, y_train), (x_test, y_test) = mnist_dataloader.load_data()
+if __name__ == "__main__":
+    #
+    # Load MINST dataset
+    #
+    pool_size = 1  # filter size, change it to compress the images more or less
+    mnist_dataloader = MnistDataloader(training_images_filepath, training_labels_filepath, test_images_filepath, test_labels_filepath, pool_size=pool_size)
+    (x_train, y_train), (x_test, y_test) = mnist_dataloader.load_data()
 
-#
-# Show some random training and test images 
-#
-images_2_show = []
-titles_2_show = []
-for i in range(0, 10):
-    r = random.randint(1, 60000)
-    images_2_show.append(x_train[r])
-    titles_2_show.append('training image [' + str(r) + '] = ' + str(y_train[r]))    
+    #
+    # Show some random training and test images 
+    #
+    images_2_show = []
+    titles_2_show = []
+    for i in range(0, 10):
+        r = random.randint(1, 60000)
+        images_2_show.append(x_train[r])
+        titles_2_show.append('training image [' + str(r) + '] = ' + str(y_train[r]))    
 
-for i in range(0, 5):
-    r = random.randint(1, 10000)
-    images_2_show.append(x_test[r])        
-    titles_2_show.append('test image [' + str(r) + '] = ' + str(y_test[r]))    
+    for i in range(0, 5):
+        r = random.randint(1, 10000)
+        images_2_show.append(x_test[r])        
+        titles_2_show.append('test image [' + str(r) + '] = ' + str(y_test[r]))    
 
-print("showing images")
-show_images(images_2_show, titles_2_show)
-print(images_2_show[0])
-print(len(images_2_show[0]))
-print(len(images_2_show[0][0]))
+    print("showing images")
+    #show_images(images_2_show, titles_2_show)
+    print(len(x_train))
+    print(len(x_test))

@@ -91,7 +91,6 @@ class MLP:
 
         return losses
                     
-        
 
     def snapshot(self):
         # copy of the current weights and biases, as plain lists
