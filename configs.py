@@ -36,9 +36,15 @@ EXPERIMENTS = [
 
 
     # classification comparisons
-    Experiment("classification_activation", CLASSIFICATION, sweep(activation=[Tanh, Sigmoid, ReLU]),
-               seeds=(1, 2, 3)),
-    Experiment("classification_architecture", CLASSIFICATION, sweep(hidden=ARCHITECTURES1), seeds=(1, 2, 3)),
+    Experiment("classification_no_hidden", CLASSIFICATION.with_(hidden=()), network_html=True,
+               description="single layer (perceptron-like): inputs -> softmax outputs, no hidden layer"),
+    Experiment("classification_no_hidden_comparison", CLASSIFICATION, sweep(hidden=[(), (3,), (8,)]),
+               description="no hidden layer vs small and bigger hidden layer"),
+    Experiment("classification_simple_architecture", CLASSIFICATION.with_(dataset="classification_simple_100", epochs=20), sweep(hidden=ARCHITECTURES1)),
+    
+    
+    Experiment("classification_activation", CLASSIFICATION, sweep(activation=[Tanh, Sigmoid, ReLU])),
+    Experiment("classification_architecture", CLASSIFICATION, sweep(hidden=ARCHITECTURES1)),
     Experiment("classification_loss", CLASSIFICATION, {
         "Softmax + CCE": {"output_activation": Softmax, "loss": CCE},
         "Softmax + MSE": {"output_activation": Softmax, "loss": MSE},

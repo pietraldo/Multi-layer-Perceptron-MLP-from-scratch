@@ -1,6 +1,6 @@
 import argparse
 
-import tests
+import tests as tests
 from configs import EXPERIMENTS
 from experiments.runner import run_experiment
 

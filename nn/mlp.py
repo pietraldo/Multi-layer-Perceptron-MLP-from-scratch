@@ -47,8 +47,9 @@ class MLP:
         for size in layers[1:]:
             self.biases.append(rng.random(size))
             
-    def train(self, epoch, batch_size, x, y, verbose=True):
-        
+    def train(self, epoch, batch_size, x, y, verbose=True, on_epoch_end=None):
+        # on_epoch_end(epoch) is called after every epoch with its number (from 1), e.g. to test the model
+
         losses = []
         # learning step used in every epoch
         self.learning_steps = []
@@ -100,6 +101,8 @@ class MLP:
             losses.append(loss)
             self.learning_steps.append(self.learning_step)
             self.history.append(self.snapshot())
+            if on_epoch_end:
+                on_epoch_end(epoch_num + 1)
 
             self.epochs_trained += 1
             self.update_learning_step(loss)

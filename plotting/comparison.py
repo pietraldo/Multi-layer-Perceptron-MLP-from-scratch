@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 from plotting.results import SURFACE, INK, INK_SECONDARY, MUTED, GRID, BASELINE
 
@@ -46,6 +47,40 @@ def plot_loss_comparison(curves, out_path, title=None):
         plt.close(fig)
         paths.append(path)
     return paths
+
+
+def plot_test_comparison(test_curves, metric, direction, out_path, title=None):
+    # test_curves: variant label -> list of test histories, one per seed (rows with epoch, subset and metrics)
+    # one panel per test subset, the line is the mean over seeds, the band is the min-max range
+    labels = list(test_curves)[:len(SERIES)]  # past 8 variants the colors would repeat
+    subsets = list(dict.fromkeys(row["subset"] for row in test_curves[labels[0]][0]))
+    better = "mniej = lepiej" if direction == "lower" else "więcej = lepiej"
+
+    fig, axes = plt.subplots(1, len(subsets), figsize=(1 + 8 * len(subsets), 5), facecolor=SURFACE, squeeze=False)
+    for ax, subset in zip(axes[0], subsets):
+        style_axes(ax)
+        positive = True
+        for label, color in zip(labels, SERIES):
+            runs = np.array([[row[metric] for row in history if row["subset"] == subset]
+                             for history in test_curves[label]], dtype=float)
+            epochs = np.arange(1, runs.shape[1] + 1)
+            ax.plot(epochs, runs.mean(axis=0), color=color, linewidth=2, label=label)
+            if len(runs) > 1:
+                ax.fill_between(epochs, runs.min(axis=0), runs.max(axis=0), color=color, alpha=0.15, linewidth=0)
+            positive = positive and runs.min() > 0
+        if direction == "lower" and positive:
+            ax.set_yscale("log")
+        ax.set_xlabel("epoka", color=INK_SECONDARY)
+        ax.set_ylabel(f"{metric} ({better})", color=INK_SECONDARY)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))  # epochs are whole numbers
+        ax.set_title(f"{metric} na zbiorze testowym, {subset}", color=INK, loc="left", fontsize=12)
+        ax.legend(frameon=False, labelcolor=INK_SECONDARY, fontsize=8)
+    if title:
+        fig.suptitle(title, color=INK, fontsize=11)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150, facecolor=SURFACE)
+    plt.close(fig)
+    return out_path
 
 
 def plot_metric_comparison(rows, metric, direction, out_path, title=None):

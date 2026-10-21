@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 
-from plotting.comparison import plot_loss_comparison, plot_metric_comparison
+from plotting.comparison import plot_loss_comparison, plot_metric_comparison, plot_test_comparison
 
 # config columns copied from the runs into the summary, in this order
 CONFIG_COLUMNS = ["dataset", "layers", "parameters", "activation", "output_activation",
@@ -66,7 +66,7 @@ def results_table(rows, task):
     return "\n".join(lines)
 
 
-def save_report(experiment, task, records, curves, out_dir):
+def save_report(experiment, task, records, curves, test_curves, out_dir):
     metrics = list(task.metrics)
     rows = aggregate(records, metrics)
     write_csv(records, os.path.join(out_dir, "runs.csv"))
@@ -82,6 +82,11 @@ def save_report(experiment, task, records, curves, out_dir):
         f.write(f"seeds: {seeds}" + (", values are mean ± std over seeds" if len(seeds) > 1 else "") + "\n\n")
         f.write(table + "\n")
     print("\n" + table.replace("±", "+-"))  # the windows console cannot always print ±
+
+    # test metrics after every epoch, also for a single variant
+    for m in metrics:
+        plot_test_comparison(test_curves, m, task.metrics[m], os.path.join(out_dir, f"test_{m}_per_epoch.png"),
+                             title=experiment.name)
 
     # comparison plots only make sense with more than one variant
     if len(curves) > 1:

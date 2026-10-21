@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 
 from experiments.config import value_label
-from experiments.report import save_report
+from experiments.report import save_report, write_csv
 from experiments.tasks import task_for
 from nn.mlp import MLP
 from plotting.network import plot_network_html
@@ -62,9 +62,11 @@ def run_experiment(experiment, seeds=None, epochs=None):
     data_cache = {}  # every variant on the same dataset sees exactly the same data
     records = []     # one row per variant, seed and test subset
     curves = {}      # variant label -> list of loss curves, one per seed
+    test_curves = {} # variant label -> list of test histories (metrics after every epoch), one per seed
     task = None
     for label, changes in experiment.variants.items():
         curves[label] = []
+        test_curves[label] = []
         for i, seed in enumerate(seeds):
             cfg = experiment.base.with_(**changes, seed=seed)
             if epochs:
@@ -75,10 +77,18 @@ def run_experiment(experiment, seeds=None, epochs=None):
             data = data_cache[cfg.dataset]
 
             model = build_model(cfg, task, data)
+            test_history = []  # one row per epoch and test subset
+
+            def test_after_epoch(epoch):
+                for r in task.evaluate(model, data):
+                    test_history.append({"epoch": epoch, "subset": r["subset"], **{m: r[m] for m in task.metrics}})
+
             start = time.perf_counter()
-            losses = model.train(cfg.epochs, cfg.batch_size, data.x, data.y, verbose=False)
-            seconds = time.perf_counter() - start
+            losses = model.train(cfg.epochs, cfg.batch_size, data.x, data.y, verbose=False,
+                                 on_epoch_end=test_after_epoch)
+            seconds = time.perf_counter() - start  # includes the testing after every epoch
             curves[label].append(losses)
+            test_curves[label].append(test_history)
 
             results = task.evaluate(model, data)
             scores = ", ".join(f"{r['subset']} {task.main_metric}={r[task.main_metric]:.5f}" for r in results)
@@ -98,11 +108,12 @@ def run_experiment(experiment, seeds=None, epochs=None):
                 title = f"{experiment.name}: {label}"
                 model.save(os.path.join(run_dir, "model.json"))
                 plot_loss(losses, os.path.join(run_dir, "loss.png"), title=title)
+                write_csv(test_history, os.path.join(run_dir, "test_history.csv"))
                 for r in results:
                     task.save_plots(r, data, run_dir, title)
                 if experiment.network_html:
                     plot_network_html(model.history, losses, model.layers, os.path.join(run_dir, "network.html"), title=title)
 
-    save_report(experiment, task, records, curves, out_dir)
+    save_report(experiment, task, records, curves, test_curves, out_dir)
     print(f"\nresults saved to {out_dir}")
     return out_dir
