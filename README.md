@@ -88,6 +88,78 @@ python training_mnist_model.py
 python digit_recognizer.py
 ```
 
+## Command cheat sheet
+
+Copy a command, run it from the project root. Every option is explained in the sections below.
+
+### Setup
+
+```bash
+pip install numpy matplotlib pandas pillow
+```
+
+### Tests and listing
+
+```bash
+python main.py test
+python main.py list
+```
+
+### Experiments (`main.py run`)
+
+```bash
+python main.py run regression
+python main.py run classification
+python main.py run regression_activation
+python main.py run regression_architecture
+python main.py run regression_learning_rate
+python main.py run regression_dataset_size
+python main.py run regression_loss
+python main.py run classification_activation
+python main.py run classification_architecture
+python main.py run classification_loss
+```
+
+Options for any of them (they can be combined and placed after the names):
+
+```bash
+python main.py run classification_loss --seeds 1 2 3          # seeds instead of the ones in configs.py
+python main.py run classification_loss --epochs 20            # epochs instead of the ones in configs.py
+python main.py run classification_loss --seeds 1 --epochs 1   # very quick check
+```
+
+Several experiments at once:
+
+```bash
+python main.py run regression classification
+python main.py run regression_activation regression_learning_rate --seeds 1 2 --epochs 50
+python main.py run regression regression_activation regression_architecture regression_learning_rate regression_dataset_size regression_loss classification classification_activation classification_architecture classification_loss --seeds 1 --epochs 1
+```
+
+### MNIST training (`training_mnist_model.py`)
+
+```bash
+python training_mnist_model.py                                              # 10 epochs, batch 32, lr 0.1, seed 42
+python training_mnist_model.py --epochs 20
+python training_mnist_model.py --epochs 1 --limit 1000                      # quick check
+python training_mnist_model.py --epochs 15 --batch-size 64 --learning-rate 0.05 --seed 7
+python training_mnist_model.py --epochs 30 --batch-size 16 --learning-rate 0.1 --seed 1 --limit 20000
+```
+
+### Digit recognizer (`digit_recognizer.py`)
+
+```bash
+python digit_recognizer.py                                                  # newest trained model, or the demo model
+python digit_recognizer.py models/demo/model.json                           # demo model
+python digit_recognizer.py models/mnist/run_20261021_114501/epoch_010/model.json   # a specific trained model (use your own run folder)
+```
+
+### Dataset viewer (`visualize_data.py`)
+
+```bash
+python visualize_data.py
+```
+
 ## 1. Tests and experiments (`main.py`)
 
 ```bash
